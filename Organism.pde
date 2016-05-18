@@ -17,6 +17,8 @@ float speed;
 float siz;
 int maxAge = 0;
 float minEnergy = 0;
+float social;
+
 
 abstract void drawSelf();
 abstract void update();
