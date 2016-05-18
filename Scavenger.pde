@@ -48,8 +48,8 @@ public class Scavenger extends Organism implements Hunt{
     speed = 3;
     siz = ((float)(energyLevel/sizeFactor));
     vel = new PVector(random(-social, social+1), random(-social, social+1));
-    hunger = 0;
-    col = color(80,160,215,100);
+   // hunger = 0;
+   // col = color(80,160,215,100);
     maxAge = 3000;
   }
 
@@ -72,7 +72,7 @@ public class Scavenger extends Organism implements Hunt{
     if(isAlive){
       eat();
       move();
-      age();
+  //    age();
      reproduce();
       if(!feeding){
         hunt();
