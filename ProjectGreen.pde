@@ -12,6 +12,7 @@ GLabel labelTest;
 //GWIndow help_Screen;
 
 void setup() {
+
   Start_Sc();
 }
 

@@ -30,12 +30,18 @@ public class Predator extends Parasite implements Hunt{
     reproductionEnergy = 50;
     reproductionEnergyMantained = 70;
     maxAge = 350;
+    col = color(180,160,15,110);
+    dCol = color(90,80,8, 110);
   }
 
+  public void age(){
+        
+  }
   public void drawSelf(){
 
-      fill(180,160,15,110);
-      ellipse(pos.x, pos.y, (int)energyLevel, (int)energyLevel);
+    siz = (float)((energyLevel+minEnergy)/sizeFactor);
+    ellipse(pos.x, pos.y, siz, siz);
+
   }
   
   public void update(){
@@ -45,7 +51,7 @@ public class Predator extends Parasite implements Hunt{
     if(isAlive){
       eat();
       move();
- //     age();
+      age();
      reproduce();
       if(!feeding){
         hunt();

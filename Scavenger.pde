@@ -32,10 +32,9 @@ public class Scavenger extends Organism implements Hunt{
     energyLevel = 50;
     reproductionEnergy = 50;
     reproductionEnergyMantained = 70;
-    maxAge = 350;
     
         isAlive = true;
-    sizeFactor = 5.;
+    sizeFactor = 1.;
     social = 1.;
     //travelFrames = 20;
     growthRate = 0.55;
@@ -45,24 +44,20 @@ public class Scavenger extends Organism implements Hunt{
     reproductionEnergy = minEnergy*4.;
     reproductionEnergyMantained = 500;
     sight = 150;
-    speed = 3;
+    eatSpeed = 0.3;
+    speed = 2;
     siz = ((float)(energyLevel/sizeFactor));
     vel = new PVector(random(-social, social+1), random(-social, social+1));
    // hunger = 0;
-   // col = color(80,160,215,100);
+   
+    col = color(180,160,15,110);
+    dCol = color(90, 80, 8,110);
     maxAge = 3000;
   }
 
   public void drawSelf(){
-//    if(feeding){
-//      fill(180,160,15,110);
-//       ellipse(pos.x, pos.y, (int)energyLevel, (int)energyLevel);
-//    }else{
-//      fill(68,134,227,110);
-//       ellipse(pos.x, pos.y, (int)energyLevel, (int)energyLevel);
-//    }
-      fill(180,160,15,110);
-      ellipse(pos.x, pos.y, (int)energyLevel, (int)energyLevel);
+     siz = (float)((energyLevel+minEnergy)/sizeFactor);
+     ellipse(pos.x, pos.y, siz, siz);
   }
   
   public void update(){
@@ -90,7 +85,12 @@ public class Scavenger extends Organism implements Hunt{
       if(PVector.dist(pos, prey.pos) < 10){
         feeding = true;
         vel.set(0,0);
-        prey.energyLevel-=0.2;energyLevel+=0.2;
+        prey.energyLevel-=eatSpeed;
+        energyLevel+=eatSpeed * growthRate;
+        if (prey.energyLevel <= minEnergy/2) {
+          organisms.remove(prey);
+          prey = null;
+        }
       }else{
         feeding = false;
       }
@@ -99,16 +99,19 @@ public class Scavenger extends Organism implements Hunt{
   }
   
   public void move(){
-    for(int i = 0; i < organisms.size();i++){
-      Organism o = organisms.get(i);
-      if(o instanceof Scavenger && !o.equals(this)){
-        if(PVector.dist(pos, o.pos) < siz && !feeding){
-            PVector socialVector = new PVector(pos.x - o.pos.x, pos.y - o.pos.y);
-            socialVector.normalize();
-            socialVector.mult(socialMovement);
-            vel.add(socialVector);  
-            //System.out.println("Social Vel Set");
-         
+    
+    if (!feeding){
+      for(int i = 0; i < organisms.size();i++){
+        Organism o = organisms.get(i);
+        if(o instanceof Scavenger && !o.equals(this)){
+          if(PVector.dist(pos, o.pos) < siz && !feeding){
+              PVector socialVector = new PVector(pos.x - o.pos.x, pos.y - o.pos.y);
+              socialVector.normalize();
+              socialVector.mult(socialMovement);
+              vel.add(socialVector);  
+              //System.out.println("Social Vel Set");
+           
+          }
         }
       }
     }
@@ -162,8 +165,9 @@ public class Scavenger extends Organism implements Hunt{
   public void chasePrey(Organism o){
    if(o != null){
       vel.set((o.pos.x - pos.x), (o.pos.y - pos.y));
+      vel.rotate(random(-PI/2,PI/2));
       vel.normalize();
-      vel.mult(5);
+      vel.mult(speed);
    }
   }
   

@@ -16,61 +16,60 @@ public void Game_Sc() {
 int x = 0;
 boolean paused;
 
+
 public void drawGame_Sc(GWinApplet g, GWinData data)
 {
+  int  MIDX = width/2;
+  int MIDY = height/2;
   if (!paused) {
+
     g.background(255, 255, 255);
     int aliveCount = 0;
     for (int i = 0; i < organisms.size (); i++) {
       Organism organism = organisms.get(i);
-
-
+      //universal removal conditions, remove them before anything else is done to speed things up
+      //outside the screen remove them
+      if ((abs(organism.pos.x - MIDX)>= MIDX + organism.siz/2) || (abs(organism.pos.y - MIDY)>= MIDY + organism.siz/2)){
+        organism.isAlive = false;
+        organisms.remove(organism);
+        continue;         
+      }
+      //remove all organisms that are low energy
+      if (organism.energyLevel < organism.minEnergy*0.4 && !organism.isAlive ){
+        organisms.remove(organism);
+        continue;         
+      }
+      if (organism.energyLevel < organism.minEnergy*0.7 && organism.isAlive){
+         organism.col = organism.dCol;
+         organism.isAlive = false;
+      } 
+      g.stroke(organism.armorCol);
+      g.strokeWeight(organism.armor);
       organism.update();
+      
       if (organism instanceof Plant) {
-        g.fill(0, 255, 0, 110);
-        if (!organism.isAlive) {
-          g.fill(0, 100, 0, 110);
-        }    
-        g.ellipse(organism.pos.x, organism.pos.y, (int)organism.energyLevel, (int)organism.energyLevel);
+        g.fill(organism.col);
+        g.ellipse(organism.pos.x, organism.pos.y, (int)organism.siz, (int)organism.siz);
       }
-
-      if (organism instanceof PlantEater) {
-        PlantEater p = (PlantEater)organism;
-        //if(organism.feeding){
-        g.fill(18, 160, 150, 110);
-        if (!organism.isAlive) {
-          g.fill(9, 80, 75, 110);
-        }   
-        g.ellipse(p.pos.x, p.pos.y, p.siz, p.siz);
-        //              }else{
-        //              g.fill(68,134,227,110);
-        //              g.ellipse(pos.x, pos.y, 30, 30);
-      }      
-      if (organism instanceof Scavenger) {
-        //if(organism.feeding){
-        g.fill(180, 160, 15, 110);
-        if (!organism.isAlive) {
-          g.fill(90, 80, 7, 110);
-        }  
-        g.ellipse(organism.pos.x, organism.pos.y, (float)organism.energyLevel, (float)organism.energyLevel);
-        //              }else{
-        //              g.fill(68,134,227,110);
-        //              g.ellipse(pos.x, pos.y, 30, 30);
+      else if (organism instanceof PlantEater) {
+        g.fill(organism.col);
+        g.ellipse(organism.pos.x, organism.pos.y, (1+1.*sin(0.01/frameRate*frameCount))*organism.siz, (1+0.5*sin((frameCount+30.)/300.))*organism.siz);
+      }    
+      
+      else if (organism instanceof Scavenger) {
+        g.fill(organism.col);
+        
+        g.ellipse(organism.pos.x, organism.pos.y, organism.siz, organism.siz);
       }
-      if (organism instanceof Parasite) {
-        //if(organism.feeding){
-        g.fill(255,100,100,110);
-        if (!organism.isAlive) {
-          g.fill(128, 50, 50, 110);
-        }
-        g.ellipse(organism.pos.x, organism.pos.y, (float)organism.energyLevel, (float)organism.energyLevel);
+      
+      else if (organism instanceof Parasite) {
+        g.fill(organism.col);
+        g.ellipse(organism.pos.x, organism.pos.y, organism.siz, organism.siz);
       }
-      if (organism instanceof Predator) {
+      
+      else if (organism instanceof Predator) {
         //if(organism.feeding){
-        g.fill(176,16,16,110);
-        if (!organism.isAlive) {
-          g.fill(88, 8, 8, 110);
-        }
+        g.fill(organism.col);
         g.ellipse(organism.pos.x, organism.pos.y, (float)organism.energyLevel, (float)organism.energyLevel);
       }
 
@@ -91,7 +90,7 @@ public void mouseClickedY(GWinApplet game_, GWinData data, MouseEvent e) {
 
   if (e.getButton()==37 && !click) {
 
-    organisms.add(new Scavenger(organisms, e.getX(), e.getY()));
+    organisms.add(new Plant(organisms, e.getX(), e.getY()));
     click = true;
     clickVal = 37;
   } else if (e.getButton()!= 37&& click) {

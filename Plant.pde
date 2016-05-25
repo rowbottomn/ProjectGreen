@@ -12,8 +12,11 @@ public class Plant extends Organism{
   
   public Plant(ArrayList<Organism> o, double x, double y){
     this.organisms = o;
+    //System.out.print("set list");
     setParameters();
+   // System.out.print("set parameters");
     pos = new PVector((float)x,(float)y);
+   //     System.out.print("set position" + pos);
   }
   
   public Plant(ArrayList<Organism> o, PVector p){
@@ -21,15 +24,22 @@ public class Plant extends Organism{
     setParameters();
     pos = p;
   }
+  
   private void setParameters(){
-    sizeFactor = 2;//Not used
-    energyLevel = 20;
-    growthRate = random(0.2)+0.1;
+    vel = new PVector();
+    sizeFactor = 0.9;//
+    minEnergy = 10;
+    energyLevel = minEnergy;
+    growthRate = 0.35;//random(0.2)+0.1;  R if we are going to do random mutation, this is not the way to do it
     decayRate = -0.05;
-    reproductionEnergy = 40;
+    reproductionEnergy = 35;
     reproductionEnergyMantained = 50;
     age = 0;
-    siz = (float)energyLevel;
+    maxAge = 2500;
+    col = color(0, 255, 0, 110);
+    dCol = color(0,122,0,110);
+    social = 0; //no sporing yet
+    siz = (float)((energyLevel+minEnergy)/sizeFactor);
   }
 
   public void update(){
@@ -44,16 +54,13 @@ public class Plant extends Organism{
   }
   
   public void drawSelf(){
-     if(isAlive){fill(0,255,0,110); /*System.out.println("Alive Plant Drawn");*/}
-     else {fill(0,0,0,110);/*System.out.println("Dead Plant Drawn");*/ }
-     ellipse(pos.x, pos.y, (int)energyLevel, (int)energyLevel);
-     
+
+    siz = (float)((energyLevel+minEnergy)/sizeFactor);
+    ellipse(pos.x, pos.y, siz, siz);
   }
   
-  public void age(){
-    age += 0.1;
-    siz = (float)energyLevel;
-    //if(!this.isAlive) System.out.println("Aging while dead");
+  protected void age(){
+    age++; 
   }
   
   public void decay(){
@@ -62,25 +69,60 @@ public class Plant extends Organism{
   }
   
   public void eat(){
-    double areaCovered = 0;
-    for(int i = 0; i < organisms.size();i++){
-      Organism organism = organisms.get(i);
-      if(organism instanceof Plant){
-         float selfRadius = (float) energyLevel/2;
-         float organismRadius = (float) organism.energyLevel/2;
-        if(!this.equals(organism)){
-           areaCovered += areaOfIntersection(this.pos.x, this.pos.y, selfRadius, organism.pos.x, organism.pos.y, organismRadius);
+    float areaCovered = 0;
+    //in order to prevent lag only worry about overlapping every second frame
+    if (frameCount%2==0){
+
+    for(Organism o : organisms){
+      if (this != o){
+        //if touching
+        if (pos.dist(o.pos)< (siz+o.siz)/2.){
+         float selfRadius = (float) siz/2.;
+         float organismRadius = (float) o.siz/2.;
+         //add the amount of covered area to the total area
+         areaCovered += areaOfIntersection(pos, selfRadius, o.pos, organismRadius); 
         }
       }
-    
     }
-    double circleArea = PI * Math.pow((energyLevel/2), 2);
-    if(circleArea >= 10){energyLevel += (1-(areaCovered/circleArea)) * growthRate;}
-    System.out.println("Circle Area: " + circleArea);
-    
+    }
+    double circleArea = PI * Math.pow((siz/2), 2);
+    energyLevel += (1-(areaCovered/circleArea)) * growthRate;
+ //  System.out.ln("Circle Area: " + circleArea);    
   }
-  
-  private double areaOfIntersection(float x0, float y0, float r0, float x1, float y1, float r1){
+
+//recoded the implementation of a method area of intersection
+  private float areaOfIntersection(PVector me, float r1, PVector them, float r2){
+   float rr2 = r2 * r2;
+   float rr1 = r1 * r1;
+   float d = me.dist(them); 
+   //are they completely inside me?
+   if (d <= r1 && r2<=r1){
+      // Return area of circle1
+      return (float)Math.PI *rr2;
+    }
+      //if i am completely inside them
+    else if (d <= r2 && r1<r2){
+       return (float)Math.PI * rr1;
+    }
+    // Circles partially overlap
+    else
+    {
+      float phi =(float) (Math.acos((rr1 + (d * d) - rr2) / (2 * r1 * d))) ;
+      float theta =(float) (Math.acos((rr2 + (d * d) - rr1) / (2 * r2 * d)));
+      float extra = (float)0.5*sqrt((-d+r1+r2)*(d+r1-r2)*(d-r1+r2)*(d+r1+r2));
+      float area = rr1* phi+rr2 * theta - extra;
+      // Return area of intersection
+      if (area != area){
+         exit(); 
+      }
+      //System.out.println(area);
+      return area;
+    }
+  }
+
+
+
+/*  private double areaOfIntersection(float x0, float y0, float r0, float x1, float y1, float r1){
    double rr0 = r0 * r0;
    double rr1 = r1 * r1;
    double d = Math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
@@ -118,10 +160,11 @@ public class Plant extends Organism{
     }
   
   }
-  
+*/  
   public void move(){
 
   }
+  
   
   public void reproduce(){
     if(this.energyLevel > reproductionEnergyMantained){
@@ -131,21 +174,21 @@ public class Plant extends Organism{
       Plant newPlant = new Plant(this.organisms, birthV.x, birthV.y);
       this.organisms.add(newPlant);
       this.energyLevel -= this.reproductionEnergy;
-      System.out.println("reproduce");
+      //System.out.println("reproduce");
     }
     
   }
   
   
   public void killSelf(){
-    if(energyLevel <=0) isAlive = false;
-    if(energyLevel < 5 && !isAlive) {
-      organisms.remove(this);
-      System.out.println("Plant Removed");
-    }else if(age > 100){
+    if(energyLevel <=minEnergy*0.75) isAlive = false;
+  //  if(energyLevel < minEnergy/2 && !isAlive) {
+  //    organisms.remove(this);
+  //  }
+    if(age > maxAge){
       isAlive = false;
     }
-    if(pos.x > width || pos.x < 0 || pos.y < 0 || pos.y > height) organisms.remove(this);
+ //   if(pos.x > width + siz || pos.x < - siz || pos.y < -siz || pos.y > height+siz)|| organisms.remove(this);
     
     
     

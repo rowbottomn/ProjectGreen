@@ -2,16 +2,6 @@
 public class PlantEater extends Organism implements Hunt{
   
   ArrayList<Organism> organisms;  
-  float minEnergy;
-  PVector vel;
-  float social;
-  int travelFrames; 
-  int maxAge;
-  float siz;
-  float speed;
-  float sight;
-  float hunger;
-  color col;
   
   public PlantEater(ArrayList<Organism> o){
     organisms = o;
@@ -37,9 +27,9 @@ public class PlantEater extends Organism implements Hunt{
     travelFrames = 20;
     growthRate = 0.55;
     decayRate = -0.03;
-    minEnergy = 40;
+    minEnergy = 50;
     energyLevel = minEnergy;
-    reproductionEnergy = minEnergy*4.;
+    reproductionEnergy = minEnergy*5.;
     reproductionEnergyMantained = 500;
     sight = 150;
     speed = 3;
@@ -48,14 +38,16 @@ public class PlantEater extends Organism implements Hunt{
     hunger = 0;
     col = color(80,160,215,100);
     maxAge = 3000;
+    healRate = 10;
+    maxHealth = healRate*maxAge;
+    health = healRate * (float)energyLevel;
   }
   
   public void drawSelf(){
-    fill(215,160,80,100);
-    if (!isAlive){
-        fill(40,40,40, 80);
-    }
+    
+    siz = (float)((energyLevel+minEnergy)/sizeFactor);
     ellipse(pos.x, pos.y, siz, siz);
+
   }
   
   public void update(){
@@ -72,8 +64,12 @@ public class PlantEater extends Organism implements Hunt{
   }
   
   protected void age(){
-    age++; 
-    siz = (float)((energyLevel+100)/sizeFactor);
+    if (health<maxHealth){
+      health += healRate;
+      armor = (health + healRate*minEnergy)/maxAge;
+      age++;
+    } 
+
   }
   
   public void decay(){
@@ -89,7 +85,6 @@ public class PlantEater extends Organism implements Hunt{
         //if touching a plant
          energyLevel += growthRate*o.energyLevel;
          o.energyLevel -= energyLevel; 
-         siz = ((float)(energyLevel/sizeFactor));
             //take all its energy 
             //and remove it from the list
             organisms.remove(o);
@@ -133,8 +128,14 @@ public class PlantEater extends Organism implements Hunt{
   }
   
   public void killSelf(){
-      if(energyLevel <= minEnergy*0.5) {isAlive =  false; organisms.remove(this);}
-      if(age > maxAge) isAlive = false;
+      if(energyLevel <= minEnergy*0.7) {//starvation level
+        isAlive =  false; 
+        organisms.remove(this);
+      }
+      if(age > maxAge) {
+        isAlive = false;
+        print("DEAD");
+      }
       
   }
   
